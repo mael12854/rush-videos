@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0c0d0f}
+*{box-sizing:border-box}
+[data-theme="dark"]{--bg:#0c0d0f;--head:rgba(12,13,15,0.85);--surface:#15161a;--surface2:#1d1f24;--hover:#272930;--line:#22242a;--text:#f2f2f3;--muted:#8f929b;--accent:oklch(0.74 0.16 32);--onaccent:#160805;--inv:#f2f2f3;--oninv:#0c0d0f}
+[data-theme="light"]{--bg:#f7f7f6;--head:rgba(247,247,246,0.88);--surface:#ffffff;--surface2:#ececea;--hover:#e1e1de;--line:#e3e3e0;--text:#151619;--muted:#5f6168;--accent:oklch(0.66 0.17 32);--onaccent:#160805;--inv:#151619;--oninv:#f7f7f6}
+a{color:var(--accent)}a:hover{color:var(--text)}
+input,textarea,button,select{font:inherit;color:inherit}
+input::placeholder,textarea::placeholder{color:var(--muted)}
+::-webkit-scrollbar{width:10px;height:8px}::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:8px}::-webkit-scrollbar-track{background:transparent}
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="min-height:100vh;background:var(--bg);color:var(--text);font-family:'Instrument Sans',Helvetica,Arial,sans-serif;font-size:14px;-webkit-font-smoothing:antialiased">
+<div style="max-width:{{ frameMax }};margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;border-left:{{ frameBorder }};border-right:{{ frameBorder }}">
+<header style="position:sticky;top:0;z-index:20;height:64px;display:flex;align-items:center;gap:16px;padding:0 {{ headPad }};background:var(--head);backdrop-filter:blur(14px)">
+  <div onClick="{{ goHome }}" style="display:flex;align-items:center;gap:10px;cursor:pointer;flex:none;width:{{ logoW }}">
+    <div style="width:30px;height:30px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center"><div style="width:0;height:0;border-left:10px solid var(--onaccent);border-top:6px solid transparent;border-bottom:6px solid transparent;margin-left:3px"></div></div>
+    <span style="font-size:22px;font-weight:700;letter-spacing:-0.04em">rush</span>
+  </div>
+  <sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:1;display:flex;justify-content:center;min-width:0">
+      <div style="display:flex;align-items:center;width:100%;max-width:580px;height:42px;border-radius:999px;background:var(--surface2);padding:0 5px 0 20px">
+        <input value="{{ q }}" onChange="{{ onQ }}" onKeyDown="{{ onQKey }}" placeholder="Rechercher" style="flex:1;min-width:0;border:0;outline:0;background:transparent">
+        <button onClick="{{ doSearch }}" style="height:32px;border:0;border-radius:999px;background:var(--hover);padding:0 14px;cursor:pointer;font-weight:600;font-size:13px">Chercher</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex:none">
+      <button onClick="{{ toggleTheme }}" style="height:38px;padding:0 12px;border-radius:999px;border:0;background:transparent;color:var(--muted);cursor:pointer;font-weight:600" style-hover="color:var(--text)">{{ themeLabel }}</button>
+      <button onClick="{{ goUpload }}" style="height:38px;padding:0 18px;border-radius:999px;border:0;background:var(--accent);color:var(--onaccent);font-weight:700;cursor:pointer">Publier</button>
+      <div onClick="{{ goProfile }}" style="width:38px;height:38px;border-radius:50%;background:var(--surface2);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer">MO</div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ mobile }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1"></div>
+    <button onClick="{{ goSearch }}" style="height:36px;padding:0 14px;border-radius:999px;border:0;background:var(--surface2);cursor:pointer;font-weight:600;font-size:13px">Chercher</button>
+    <button onClick="{{ toggleTheme }}" style="height:36px;padding:0 8px;border:0;background:transparent;color:var(--muted);cursor:pointer;font-weight:600;font-size:13px">{{ themeLabel }}</button>
+  </sc-if>
+</header>
+<div style="display:flex;flex:1;min-height:0">
+  <sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+    <nav style="flex:none;width:236px;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto;padding:8px 12px 20px;display:flex;flex-direction:column;gap:2px">
+      <sc-for list="{{ navMain }}" as="n" hint-placeholder-count="3">
+        <div onClick="{{ n.go }}" style="display:flex;align-items:center;height:42px;padding:0 14px;border-radius:12px;cursor:pointer;background:{{ n.bg }};color:{{ n.color }};font-weight:600" style-hover="color:var(--text)">{{ n.label }}</div>
+      </sc-for>
+      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;padding:22px 14px 8px">Vous</div>
+      <sc-for list="{{ navYou }}" as="n" hint-placeholder-count="2">
+        <div onClick="{{ n.go }}" style="display:flex;align-items:center;height:42px;padding:0 14px;border-radius:12px;cursor:pointer;background:{{ n.bg }};color:{{ n.color }};font-weight:600" style-hover="color:var(--text)">{{ n.label }}</div>
+      </sc-for>
+      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;padding:22px 14px 8px">Abonnements</div>
+      <sc-for list="{{ subChannels }}" as="c" hint-placeholder-count="3">
+        <div onClick="{{ c.go }}" style="display:flex;align-items:center;gap:12px;height:40px;padding:0 14px;border-radius:12px;cursor:pointer;color:var(--muted);font-weight:500" style-hover="background:var(--surface);color:var(--text)">
+          <span style="width:22px;height:22px;border-radius:50%;background:{{ c.avatarBg }};color:#0e0f11;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none">{{ c.initials }}</span>
+          <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</span>
+        </div>
+      </sc-for>
+      <div style="flex:1"></div>
+      <div style="margin:24px 2px 0;padding:14px;border-radius:14px;background:var(--surface);display:flex;flex-direction:column;gap:4px">
+        <span style="font-weight:700">Zéro pub.</span>
+        <span style="font-size:12.5px;color:var(--muted);line-height:1.45">Ni avant, ni pendant, ni après la vidéo.</span>
+      </div>
+    </nav>
+  </sc-if>
+  <main style="flex:1;min-width:0;padding:{{ mainPad }}">
+    <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:28px">
+        <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:2px">
+          <sc-for list="{{ chips }}" as="c" hint-placeholder-count="9">
+            <button onClick="{{ c.go }}" style="flex:none;height:34px;padding:0 15px;border-radius:999px;border:0;cursor:pointer;font-weight:600;font-size:13.5px;background:{{ c.bg }};color:{{ c.color }}">{{ c.label }}</button>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:36px 20px">
+          <sc-for list="{{ homeTop }}" as="v" hint-placeholder-count="8">
+            <dc-import name="VideoCard" v="{{ v }}" hint-size="100%,250px"></dc-import>
+          </sc-for>
+        </div>
+        <sc-if value="{{ showShelf }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:baseline;gap:10px">
+              <span style="font-size:20px;font-weight:700;letter-spacing:-0.02em">Shorts</span>
+              <span style="color:var(--muted);font-size:13px">moins d'une minute</span>
+            </div>
+            <div style="display:flex;gap:14px;overflow-x:auto;padding-bottom:4px">
+              <sc-for list="{{ shortsList }}" as="s" hint-placeholder-count="6">
+                <div onClick="{{ s.open }}" style="flex:none;width:{{ shortW }};display:flex;flex-direction:column;gap:10px;cursor:pointer">
+                  <div style="aspect-ratio:9/16;border-radius:16px;background:{{ s.thumbBg }};display:flex;align-items:flex-end;padding:12px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:{{ s.thumbInk }}">{{ s.label }}</div>
+                  <div style="display:flex;flex-direction:column;gap:3px">
+                    <span style="font-weight:600;line-height:1.3">{{ s.title }}</span>
+                    <span style="font-size:12.5px;color:var(--muted)">{{ s.likes }} j'aime</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:36px 20px">
+          <sc-for list="{{ homeRest }}" as="v" hint-placeholder-count="4">
+            <dc-import name="VideoCard" v="{{ v }}" hint-size="100%,250px"></dc-import>
+          </sc-for>
+        </div>
+        <sc-if value="{{ homeEmpty }}" hint-placeholder-val="{{ false }}"><span style="color:var(--muted)">Rien dans cette catégorie pour l'instant.</span></sc-if>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isWatch }}" hint-placeholder-val="{{ false }}">
+      <div style="display:grid;grid-template-columns:{{ watchCols }};gap:28px;align-items:start;max-width:1500px;margin:0 auto">
+        <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+          <div onClick="{{ togglePlay }}" style="position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:{{ wv.thumbBg }};cursor:pointer;display:flex;align-items:center;justify-content:center">
+            <span style="position:absolute;left:16px;top:14px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:{{ wv.thumbInk }}">{{ wv.label }}</span>
+            <sc-if value="{{ paused }}" hint-placeholder-val="{{ true }}">
+              <div style="width:76px;height:76px;border-radius:50%;background:rgba(242,242,243,0.95);display:flex;align-items:center;justify-content:center"><div style="width:0;height:0;border-left:22px solid #0c0d0f;border-top:14px solid transparent;border-bottom:14px solid transparent;margin-left:6px"></div></div>
+            </sc-if>
+            <div style="position:absolute;left:0;right:0;bottom:0;padding:28px 18px 14px;background:linear-gradient(transparent,rgba(0,0,0,0.6));display:flex;flex-direction:column;gap:10px;color:#f2f2f3">
+              <div onPointerDown="{{ seekStart }}" onClick="{{ stop }}" style="position:relative;height:18px;display:flex;align-items:center;cursor:pointer;touch-action:none">
+                <div style="position:absolute;left:0;right:0;height:{{ barH }};border-radius:3px;background:rgba(255,255,255,0.22)"></div>
+                <div style="position:absolute;left:0;width:{{ progressPct }};height:{{ barH }};border-radius:3px;background:var(--accent)"></div>
+                <div style="position:absolute;left:{{ progressPct }};width:16px;height:16px;margin-left:-8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(0,0,0,0.25)"></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:14px;font-size:13px;font-weight:600">
+                <span>{{ playLabel }}</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-weight:400;opacity:0.85">{{ timeLabel }}</span>
+              </div>
+            </div>
+          </div>
+          <h1 style="margin:4px 0 0;font-size:22px;line-height:1.25;font-weight:700;letter-spacing:-0.02em;text-wrap:pretty">{{ wv.title }}</h1>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+            <div onClick="{{ wv.openCh }}" style="display:flex;align-items:center;gap:12px;cursor:pointer">
+              <div style="width:42px;height:42px;border-radius:50%;background:{{ wv.avatarBg }};color:#0e0f11;font-weight:700;display:flex;align-items:center;justify-content:center">{{ wv.initials }}</div>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <span style="font-weight:700;font-size:15px">{{ wv.channelName }}</span>
+                <span style="font-size:12.5px;color:var(--muted)">{{ wv.chSubs }} abonnés</span>
+              </div>
+            </div>
+            <button onClick="{{ toggleSubW }}" style="height:38px;padding:0 18px;border-radius:999px;border:0;cursor:pointer;font-weight:700;background:{{ subW.bg }};color:{{ subW.color }}">{{ subW.label }}</button>
+            <span style="flex:1"></span>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button onClick="{{ toggleLike }}" style="height:38px;padding:0 16px;border-radius:999px;border:0;cursor:pointer;font-weight:600;background:{{ like.bg }};color:{{ like.color }}">{{ like.label }}</button>
+              <button style="height:38px;padding:0 16px;border-radius:999px;border:0;cursor:pointer;font-weight:600;background:var(--surface2)" style-hover="background:var(--hover)">Partager</button>
+              <button style="height:38px;padding:0 16px;border-radius:999px;border:0;cursor:pointer;font-weight:600;background:var(--surface2)" style-hover="background:var(--hover)">Enregistrer</button>
+              <sc-if value="{{ isMineV }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ askDelV }}" style="height:38px;padding:0 16px;border-radius:999px;border:0;cursor:pointer;font-weight:700;background:var(--surface2);color:oklch(0.68 0.19 25)" style-hover="background:var(--hover)">Supprimer cette vidéo</button>
+              </sc-if>
+            </div>
+          </div>
+          <div onClick="{{ toggleDesc }}" style="background:var(--surface);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;cursor:pointer;line-height:1.55">
+            <span style="font-weight:700">{{ wv.meta }}</span>
+            <span style="white-space:pre-line">{{ descText }}</span>
+            <span style="font-weight:700;color:var(--muted)">{{ descMore }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:22px;padding-top:10px">
+            <span style="font-size:18px;font-weight:700;letter-spacing:-0.01em">{{ commentCount }} commentaires</span>
+            <div style="display:flex;gap:12px;align-items:center">
+              <div style="flex:none;width:36px;height:36px;border-radius:50%;background:var(--surface2);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center">MO</div>
+              <div style="flex:1;display:flex;gap:10px;align-items:center;min-width:0;background:var(--surface);border-radius:999px;padding:4px 4px 4px 18px">
+                <input value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onDraftKey }}" placeholder="Ajouter un commentaire…" style="flex:1;min-width:0;border:0;background:transparent;outline:0;padding:8px 0">
+                <button onClick="{{ postComment }}" style="flex:none;height:34px;padding:0 16px;border-radius:999px;border:0;cursor:pointer;font-weight:700;background:{{ postBg }};color:{{ postColor }}">Envoyer</button>
+              </div>
+            </div>
+            <sc-for list="{{ comments }}" as="c" hint-placeholder-count="3">
+              <div style="display:flex;gap:12px">
+                <div style="flex:none;width:36px;height:36px;border-radius:50%;background:var(--surface2);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center">{{ c.ini }}</div>
+                <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+                  <span style="font-size:13px;display:flex;gap:8px"><b>{{ c.who }}</b><span style="color:var(--muted)">{{ c.ago }}</span></span>
+                  <span style="line-height:1.5;text-wrap:pretty">{{ c.text }}</span>
+                  <span style="font-size:12.5px;color:var(--muted)">{{ c.likes }} j'aime · Répondre</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+          <span style="font-size:15px;font-weight:700">À suivre</span>
+          <sc-for list="{{ upNext }}" as="v" hint-placeholder-count="6">
+            <div onClick="{{ v.open }}" style="display:flex;gap:12px;cursor:pointer" style-hover="opacity:0.8">
+              <div style="position:relative;flex:none;width:168px;aspect-ratio:16/9;border-radius:10px;background:{{ v.thumbBg }}"><span style="position:absolute;right:6px;bottom:6px;background:rgba(8,8,10,0.78);color:#f2f2f3;font-size:10.5px;padding:2px 5px;border-radius:5px;font-family:'JetBrains Mono',monospace">{{ v.dur }}</span></div>
+              <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+                <span style="font-weight:600;line-height:1.3;font-size:14px;text-wrap:pretty">{{ v.title }}</span>
+                <span style="font-size:12.5px;color:var(--muted)">{{ v.channelName }}</span>
+                <span style="font-size:12.5px;color:var(--muted)">{{ v.meta }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isChannel }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:24px">
+        <div style="aspect-ratio:6/1;min-height:110px;border-radius:18px;background:{{ cch.bannerBg }}"></div>
+        <div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap">
+          <div style="width:96px;height:96px;border-radius:50%;background:{{ cch.avatarBg }};color:#0e0f11;font-size:30px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none">{{ cch.ini }}</div>
+          <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:200px">
+            <span style="font-size:30px;font-weight:700;letter-spacing:-0.03em">{{ cch.name }}</span>
+            <span style="color:var(--muted)">{{ cch.line }}</span>
+            <span style="line-height:1.5;max-width:560px;text-wrap:pretty">{{ cch.desc }}</span>
+          </div>
+          <sc-if value="{{ notMineCh }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ toggleSubC }}" style="height:40px;padding:0 22px;border-radius:999px;border:0;cursor:pointer;font-weight:700;background:{{ subC.bg }};color:{{ subC.color }}">{{ subC.label }}</button>
+          </sc-if>
+          <sc-if value="{{ isMineCh }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button onClick="{{ askDelAll }}" style="height:40px;padding:0 18px;border-radius:999px;border:0;cursor:pointer;font-weight:600;background:var(--surface2)" style-hover="background:var(--hover)">Supprimer les vidéos</button>
+              <button onClick="{{ askDelCh }}" style="height:40px;padding:0 18px;border-radius:999px;border:0;cursor:pointer;font-weight:700;background:var(--surface2);color:oklch(0.68 0.19 25)" style-hover="background:var(--hover)">Supprimer ma chaîne</button>
+            </div>
+          </sc-if>
+        </div>
+        <div style="display:flex;gap:4px;border-bottom:1px solid var(--line)">
+          <sc-for list="{{ chTabs }}" as="t" hint-placeholder-count="3">
+            <div onClick="{{ t.go }}" style="padding:12px 16px;cursor:pointer;font-weight:600;color:{{ t.color }};border-bottom:2px solid {{ t.line }};margin-bottom:-1px">{{ t.label }}</div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ isChVideos }}" hint-placeholder-val="{{ true }}">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:36px 20px">
+            <sc-for list="{{ chVideos }}" as="v" hint-placeholder-count="4">
+              <dc-import name="VideoCard" v="{{ v }}" hint-size="100%,250px"></dc-import>
+            </sc-for>
+          </div>
+          <sc-if value="{{ noChVideos }}" hint-placeholder-val="{{ false }}"><span style="color:var(--muted)">Aucune vidéo pour l'instant.</span></sc-if>
+        </sc-if>
+        <sc-if value="{{ isChShorts }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;gap:14px;flex-wrap:wrap">
+            <sc-for list="{{ chShorts }}" as="s" hint-placeholder-count="2">
+              <div onClick="{{ s.open }}" style="width:170px;display:flex;flex-direction:column;gap:10px;cursor:pointer">
+                <div style="aspect-ratio:9/16;border-radius:16px;background:{{ s.thumbBg }}"></div>
+                <span style="font-weight:600;line-height:1.3">{{ s.title }}</span>
+              </div>
+            </sc-for>
+            <sc-if value="{{ noChShorts }}" hint-placeholder-val="{{ false }}"><span style="color:var(--muted)">Pas encore de Shorts sur cette chaîne.</span></sc-if>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isChAbout }}" hint-placeholder-val="{{ false }}">
+          <div style="max-width:620px;display:flex;flex-direction:column;gap:10px;line-height:1.6">
+            <span style="font-size:17px;font-weight:700">À propos</span>
+            <span>{{ cch.desc }}</span>
+            <span style="color:var(--muted)">{{ cch.line }}</span>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isSearch }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:24px;max-width:1100px">
+        <sc-if value="{{ mobile }}" hint-placeholder-val="{{ false }}">
+          <input value="{{ q }}" onChange="{{ onQ }}" placeholder="Rechercher" style="height:44px;border:0;outline:0;border-radius:999px;background:var(--surface2);padding:0 18px">
+        </sc-if>
+        <sc-if value="{{ hasQ }}" hint-placeholder-val="{{ false }}">
+          <span style="color:var(--muted)">{{ resCount }} vidéos pour « {{ qShown }} »</span>
+        </sc-if>
+        <sc-for list="{{ chResults }}" as="c" hint-placeholder-count="0">
+          <div onClick="{{ c.go }}" style="display:flex;gap:20px;align-items:center;padding:16px;border-radius:16px;background:var(--surface);cursor:pointer;flex-wrap:wrap">
+            <div style="width:72px;height:72px;border-radius:50%;background:{{ c.avatarBg }};color:#0e0f11;font-weight:700;font-size:22px;display:flex;align-items:center;justify-content:center;flex:none">{{ c.initials }}</div>
+            <div style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:17px;font-weight:700">{{ c.name }}</span>
+              <span style="font-size:13px;color:var(--muted)">{{ c.line }}</span>
+              <span style="font-size:13px;color:var(--muted)">{{ c.desc }}</span>
+            </div>
+            <button onClick="{{ c.toggle }}" style="height:38px;padding:0 18px;border-radius:999px;border:0;cursor:pointer;font-weight:700;background:{{ c.sub.bg }};color:{{ c.sub.color }}">{{ c.sub.label }}</button>
+          </div>
+        </sc-for>
+        <sc-for list="{{ searchRows }}" as="v" hint-placeholder-count="3">
+          <div onClick="{{ v.open }}" style="display:grid;grid-template-columns:{{ searchCols }};gap:18px;cursor:pointer" style-hover="opacity:0.85">
+            <div style="position:relative;aspect-ratio:16/9;border-radius:14px;background:{{ v.thumbBg }}"><span style="position:absolute;right:8px;bottom:8px;background:rgba(8,8,10,0.78);color:#f2f2f3;font-size:11px;padding:2px 6px;border-radius:5px;font-family:'JetBrains Mono',monospace">{{ v.dur }}</span></div>
+            <div style="display:flex;flex-direction:column;gap:8px;min-width:0;padding-top:2px">
+              <span style="font-size:17px;font-weight:600;line-height:1.3;text-wrap:pretty">{{ v.title }}</span>
+              <span style="font-size:13px;color:var(--muted)">{{ v.meta }}</span>
+              <span style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)"><span style="width:22px;height:22px;border-radius:50%;background:{{ v.avatarBg }}"></span>{{ v.channelName }}</span>
+              <span style="font-size:13px;color:var(--muted)">{{ v.snippet }}</span>
+            </div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noRes }}" hint-placeholder-val="{{ false }}"><span style="color:var(--muted)">Aucun résultat. Essaie un autre mot.</span></sc-if>
+        <sc-if value="{{ noQ }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <span style="font-weight:700">Idées de recherche</span>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <sc-for list="{{ suggest }}" as="t" hint-placeholder-count="5">
+                <button onClick="{{ t.go }}" style="height:34px;padding:0 15px;border-radius:999px;border:0;background:var(--surface2);cursor:pointer;font-weight:600">{{ t.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isSubs }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:28px">
+        <div style="display:flex;gap:22px;overflow-x:auto;padding-bottom:4px">
+          <sc-for list="{{ subRow }}" as="c" hint-placeholder-count="4">
+            <div onClick="{{ c.go }}" style="flex:none;width:84px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer">
+              <div style="width:64px;height:64px;border-radius:50%;background:{{ c.avatarBg }};color:#0e0f11;font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center">{{ c.initials }}</div>
+              <span style="font-size:12.5px;text-align:center;line-height:1.25">{{ c.name }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <span style="font-size:20px;font-weight:700;letter-spacing:-0.02em">Dernières vidéos</span>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:36px 20px">
+          <sc-for list="{{ subVideos }}" as="v" hint-placeholder-count="4">
+            <dc-import name="VideoCard" v="{{ v }}" hint-size="100%,250px"></dc-import>
+          </sc-for>
+        </div>
+        <sc-if value="{{ noSubs }}" hint-placeholder-val="{{ false }}"><span style="color:var(--muted)">Tu n'es abonné(e) à aucune chaîne pour l'instant.</span></sc-if>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isUpload }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:24px">
+        <span style="font-size:26px;font-weight:700;letter-spacing:-0.03em">Publier une vidéo</span>
+        <sc-if value="{{ upPick }}" hint-placeholder-val="{{ true }}">
+          <div onClick="{{ pickFile }}" style="border:1.5px dashed var(--line);border-radius:20px;padding:64px 24px;display:flex;flex-direction:column;align-items:center;gap:14px;cursor:pointer;text-align:center" style-hover="background:var(--surface)">
+            <span style="font-size:18px;font-weight:700">Glisse ta vidéo ici</span>
+            <span style="color:var(--muted)">MP4, MOV ou WebM · jusqu'à 4 Go</span>
+            <span style="height:40px;padding:0 20px;border-radius:999px;background:var(--accent);color:var(--onaccent);font-weight:700;display:flex;align-items:center">Choisir un fichier</span>
+          </div>
+        </sc-if>
+        <sc-if value="{{ upForm }}" hint-placeholder-val="{{ false }}">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:28px;align-items:start">
+            <div style="display:flex;flex-direction:column;gap:18px">
+              <div style="display:flex;flex-direction:column;gap:8px"><span style="font-weight:600">Chaîne</span>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <sc-for list="{{ upChOpts }}" as="o" hint-placeholder-count="1">
+                    <button onClick="{{ o.go }}" style="height:36px;padding:0 14px 0 6px;border-radius:999px;border:0;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:8px;background:{{ o.bg }};color:{{ o.color }}"><span style="width:24px;height:24px;border-radius:50%;background:{{ o.avatarBg }}"></span>{{ o.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+              <label style="display:flex;flex-direction:column;gap:8px"><span style="font-weight:600">Titre</span>
+                <input value="{{ upTitle }}" onChange="{{ onUpTitle }}" style="height:46px;border:0;outline:0;border-radius:12px;background:var(--surface2);padding:0 14px">
+              </label>
+              <label style="display:flex;flex-direction:column;gap:8px"><span style="font-weight:600">Description</span>
+                <textarea value="{{ upDesc }}" onChange="{{ onUpDesc }}" placeholder="Raconte de quoi parle ta vidéo" style="min-height:120px;border:0;outline:0;border-radius:12px;background:var(--surface2);padding:12px 14px;resize:vertical"></textarea>
+              </label>
+              <div style="display:flex;flex-direction:column;gap:8px"><span style="font-weight:600">Visibilité</span>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <sc-for list="{{ visOpts }}" as="o" hint-placeholder-count="3">
+                    <button onClick="{{ o.go }}" style="height:36px;padding:0 14px;border-radius:999px;border:0;cursor:pointer;font-weight:600;background:{{ o.bg }};color:{{ o.color }}">{{ o.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px;background:var(--surface);border-radius:18px;padding:14px">
+              <div style="aspect-ratio:16/9;border-radius:12px;background:{{ upThumb }}"></div>
+              <div style="height:4px;border-radius:2px;background:var(--surface2);overflow:hidden"><div style="height:100%;width:{{ upPct }};background:var(--accent)"></div></div>
+              <span style="font-size:13px;color:var(--muted)">{{ upPctLabel }}</span>
+              <button onClick="{{ publish }}" style="height:44px;border-radius:999px;border:0;cursor:pointer;font-weight:700;background:{{ pubBg }};color:{{ pubColor }}">Publier</button>
+              <span style="font-size:12.5px;color:var(--muted);line-height:1.45">Aucune pub ne sera ajoutée à ta vidéo.</span>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ upDone }}" hint-placeholder-val="{{ false }}">
+          <div style="background:var(--surface);border-radius:20px;padding:40px 24px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center">
+            <span style="font-size:22px;font-weight:700">C'est en ligne.</span>
+            <span style="color:var(--muted)">Ta vidéo est publiée sur {{ upChName }}.</span>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+              <button onClick="{{ watchMine }}" style="height:40px;padding:0 20px;border-radius:999px;border:0;cursor:pointer;font-weight:700;background:var(--accent);color:var(--onaccent)">Voir la vidéo</button>
+              <button onClick="{{ uploadAgain }}" style="height:40px;padding:0 20px;border-radius:999px;border:0;cursor:pointer;font-weight:600;background:var(--surface2)">En publier une autre</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:32px">
+        <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+          <div style="width:84px;height:84px;border-radius:50%;background:var(--inv);color:var(--oninv);font-size:26px;font-weight:700;display:flex;align-items:center;justify-content:center">MO</div>
+          <div style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:200px">
+            <span style="font-size:28px;font-weight:700;letter-spacing:-0.03em">Mon compte</span>
+            <div style="display:flex;gap:18px;flex-wrap:wrap;color:var(--muted)">
+              <sc-for list="{{ profStats }}" as="p" hint-placeholder-count="3"><span><b style="color:var(--text)">{{ p.n }}</b> {{ p.l }}</span></sc-for>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <span style="font-size:20px;font-weight:700;letter-spacing:-0.02em">Mes chaînes</span>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px">
+            <sc-for list="{{ myChList }}" as="c" hint-placeholder-count="1">
+              <div onClick="{{ c.go }}" style="display:flex;gap:14px;align-items:center;padding:16px;border-radius:16px;background:var(--surface);cursor:pointer" style-hover="background:var(--surface2)">
+                <div style="width:52px;height:52px;border-radius:50%;background:{{ c.avatarBg }};color:#0e0f11;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none">{{ c.initials }}</div>
+                <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+                  <span style="font-weight:700">{{ c.name }}</span>
+                  <span style="font-size:12.5px;color:var(--muted)">{{ c.line }}</span>
+                </div>
+              </div>
+            </sc-for>
+            <div style="display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:16px;border:1.5px dashed var(--line)">
+              <input value="{{ newCh }}" onChange="{{ onNewCh }}" onKeyDown="{{ onNewChKey }}" placeholder="Nom de la nouvelle chaîne" style="height:38px;border:0;outline:0;border-radius:10px;background:var(--surface2);padding:0 12px">
+              <button onClick="{{ createCh }}" style="height:38px;border-radius:999px;border:0;cursor:pointer;font-weight:700;background:{{ newChBg }};color:{{ newChColor }}">Créer une chaîne</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <span style="font-size:20px;font-weight:700;letter-spacing:-0.02em">Historique</span>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:28px 18px">
+            <sc-for list="{{ historyList }}" as="v" hint-placeholder-count="2">
+              <dc-import name="VideoCard" v="{{ v }}" hint-size="100%,230px"></dc-import>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <span style="font-size:20px;font-weight:700;letter-spacing:-0.02em">Vidéos aimées</span>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:28px 18px">
+            <sc-for list="{{ likedList }}" as="v" hint-placeholder-count="0">
+              <dc-import name="VideoCard" v="{{ v }}" hint-size="100%,230px"></dc-import>
+            </sc-for>
+          </div>
+          <sc-if value="{{ noLiked }}" hint-placeholder-val="{{ true }}"><span style="color:var(--muted)">Les vidéos que tu aimes apparaîtront ici.</span></sc-if>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isShorts }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;justify-content:center;align-items:center;gap:18px;padding-top:8px">
+        <div style="position:relative;height:{{ shortH }};aspect-ratio:9/16;max-width:100%;border-radius:{{ shortR }};overflow:hidden;background:{{ sh.thumbBg }}">
+          <span style="position:absolute;left:16px;top:16px;font-family:'JetBrains Mono',monospace;font-size:11px;color:{{ sh.thumbInk }}">{{ sh.label }}</span>
+          <div style="position:absolute;left:0;right:0;bottom:0;padding:60px 76px 18px 16px;background:linear-gradient(transparent,rgba(0,0,0,0.65));color:#f2f2f3;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span onClick="{{ sh.openCh }}" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700"><span style="width:30px;height:30px;border-radius:50%;background:{{ sh.avatarBg }}"></span>{{ sh.channelName }}</span>
+              <button onClick="{{ toggleShSub }}" style="height:30px;padding:0 12px;border-radius:999px;border:0;cursor:pointer;font-weight:700;font-size:12.5px;background:#f2f2f3;color:#0c0d0f">{{ shSub.label }}</button>
+            </div>
+            <span style="font-weight:600;line-height:1.35">{{ sh.title }}</span>
+          </div>
+          <div style="position:absolute;right:12px;bottom:20px;display:flex;flex-direction:column;gap:12px;align-items:center">
+            <button onClick="{{ toggleShortLike }}" style="width:52px;height:52px;border-radius:50%;border:0;cursor:pointer;font-weight:700;font-size:11px;background:{{ shLike.bg }};color:{{ shLike.color }}">J'aime</button>
+            <span style="font-size:11.5px;font-weight:700;color:#f2f2f3">{{ sh.likes }}</span>
+            <button style="width:52px;height:52px;border-radius:50%;border:0;cursor:pointer;font-weight:700;font-size:11px;background:rgba(242,242,243,0.18);color:#f2f2f3">Partager</button>
+          </div>
+        </div>
+        <sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:10px;align-items:center">
+            <button onClick="{{ prevShort }}" style="width:48px;height:48px;border-radius:50%;border:0;cursor:pointer;background:var(--surface2);font-weight:700">↑</button>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)">{{ shPos }}</span>
+            <button onClick="{{ nextShortF }}" style="width:48px;height:48px;border-radius:50%;border:0;cursor:pointer;background:var(--surface2);font-weight:700">↓</button>
+          </div>
+        </sc-if>
+      </div>
+      <sc-if value="{{ mobile }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;justify-content:center;gap:10px;padding:10px 0 0">
+          <button onClick="{{ prevShort }}" style="height:38px;padding:0 16px;border-radius:999px;border:0;background:var(--surface2);font-weight:600">Précédent</button>
+          <button onClick="{{ nextShortF }}" style="height:38px;padding:0 16px;border-radius:999px;border:0;background:var(--surface2);font-weight:600">Suivant</button>
+        </div>
+      </sc-if>
+    </sc-if>
+  </main>
+</div>
+<sc-if value="{{ hasConfirm }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ cancelConfirm }}" style="position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:20px">
+    <div onClick="{{ stop }}" style="width:100%;max-width:400px;background:var(--surface);color:var(--text);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:12px">
+      <span style="font-size:19px;font-weight:700;letter-spacing:-0.02em">{{ confirmTitle }}</span>
+      <span style="color:var(--muted);line-height:1.5">{{ confirmText }}</span>
+      <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:8px">
+        <button onClick="{{ cancelConfirm }}" style="height:40px;padding:0 18px;border-radius:999px;border:0;cursor:pointer;font-weight:600;background:var(--surface2)">Annuler</button>
+        <button onClick="{{ doConfirm }}" style="height:40px;padding:0 18px;border-radius:999px;border:0;cursor:pointer;font-weight:700;background:oklch(0.62 0.2 25);color:#fff">Supprimer</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+<sc-if value="{{ mobile }}" hint-placeholder-val="{{ false }}">
+  <div style="position:sticky;bottom:0;z-index:20;height:64px;display:grid;grid-template-columns:repeat(5,1fr);align-items:center;background:var(--head);backdrop-filter:blur(14px);border-top:1px solid var(--line)">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+      <div onClick="{{ t.go }}" style="height:100%;display:flex;align-items:center;justify-content:center;cursor:pointer">
+        <span style="font-size:12px;font-weight:700;color:{{ t.color }};background:{{ t.bg }};padding:{{ t.pad }};border-radius:999px">{{ t.label }}</span>
+      </div>
+    </sc-for>
+  </div>
+</sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark'|'light'&quot;},&quot;device&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;auto&quot;,&quot;desktop&quot;,&quot;mobile&quot;],&quot;default&quot;:&quot;auto&quot;,&quot;tsType&quot;:&quot;'auto'|'desktop'|'mobile'&quot;},&quot;showShortsShelf&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const CH={
+lumen:{name:'Lumen Lab',ini:'LL',h:220,subs:'412 k',desc:'La science expliquée sans jargon. Une nouvelle vidéo chaque jeudi.'},
+basse:{name:'Basse Fréquence',ini:'BF',h:300,subs:'1,2 M',desc:'Sessions live, production et coulisses de la musique électronique.'},
+gamelle:{name:'La Gamelle',ini:'LG',h:60,subs:'860 k',desc:'Cuisine de tous les jours, sans chichis, en moins de 20 minutes.'},
+pixel:{name:'Pixel Nomade',ini:'PN',h:155,subs:'238 k',desc:'Jeux indés, speedruns et longues parties commentées.'},
+rail:{name:'Hors Rail',ini:'HR',h:110,subs:'95 k',desc:'Voyages lents, en train et à vélo, à travers l’Europe.'},
+code:{name:'Code Brut',ini:'CB',h:265,subs:'177 k',desc:'Développement web, outils et projets construits de A à Z.'},
+terrain:{name:'Terrain Vague',ini:'TV',h:25,subs:'540 k',desc:'Sport amateur, entraînements et grands récits du sport.'},
+rires:{name:'Mauvaise Foi',ini:'MF',h:345,subs:'2,4 M',desc:'Sketchs, chroniques et mauvaise foi assumée.'},
+moi:{name:'Ma chaîne',ini:'MO',h:32,subs:'12',desc:'Ma chaîne perso sur Rush.'},
+labo:{name:'Mes sites Claude Code',ini:'SC',h:180,subs:'3',desc:'Les sites que je construis avec Claude Code, du début à la fin.'}};
+const V=[
+['v1','lumen','Pourquoi le ciel est-il bleu ? (et pas violet)','Science','14:32','1,1 M','il y a 3 jours','prisme · lumière'],
+['v2','basse','Session live au lever du soleil — 45 minutes','Musique','46:10','640 k','il y a 1 semaine','live · rooftop'],
+['v3','gamelle','Pâtes au citron en 12 minutes chrono','Cuisine','11:48','890 k','il y a 2 jours','plan de travail'],
+['v4','pixel','J’ai fini ce jeu indé sans jamais sauter','Gaming','28:05','312 k','il y a 5 jours','capture de jeu'],
+['v5','rail','Lisbonne → Istanbul en train, sans avion','Voyage','38:20','205 k','il y a 2 semaines','fenêtre de train'],
+['v6','code','Je code une plateforme vidéo en un week-end','Tech','22:16','148 k','il y a 1 jour','écran · éditeur'],
+['v7','terrain','Courir son premier marathon à 40 ans','Sport','19:54','430 k','il y a 4 jours','ligne d’arrivée'],
+['v8','rires','Le stagiaire qui répondait à tous les mails','Humour','6:41','2,3 M','il y a 6 jours','open space'],
+['v9','lumen','Ce qui se passe vraiment dans un trou noir','Science','17:08','2 M','il y a 1 mois','simulation'],
+['v10','basse','J’ai produit ce morceau avec seulement 3 sons','Musique','12:30','220 k','il y a 3 semaines','home studio'],
+['v11','gamelle','Le pain maison sans pétrissage','Cuisine','9:15','1,4 M','il y a 2 mois','four · miche'],
+['v12','pixel','Speedrun commenté : nouveau record perso','Gaming','33:42','98 k','il y a 1 jour','chrono à l’écran'],
+['v13','code','CSS Grid, enfin expliqué clairement','Tech','15:03','310 k','il y a 3 semaines','schéma de grille'],
+['v14','rail','Trois jours à vélo le long de la Loire','Voyage','24:47','77 k','il y a 1 mois','route · rivière'],
+['v15','terrain','La remontée la plus folle de l’histoire du rugby','Sport','13:21','960 k','il y a 2 semaines','stade · tribune'],
+['v16','rires','Réunion de copropriété : la série complète','Humour','21:12','1,7 M','il y a 1 mois','salle commune']
+].map((a,i)=>({id:a[0],ch:a[1],title:a[2],cat:a[3],dur:a[4],views:a[5],ago:a[6],label:a[7],o:(i%3)*22}));
+const S=[
+['s1','gamelle','Le geste pour couper un oignon sans pleurer','oignon · couteau','48 k'],
+['s2','rires','Quand le Wi-Fi revient pendant la visio','visio','210 k'],
+['s3','lumen','Une goutte d’eau au ralenti, 10 000 i/s','ralenti','92 k'],
+['s4','pixel','Le bug le plus drôle de l’année','capture de jeu','131 k'],
+['s5','basse','Un beat en 30 secondes','pads · beat','67 k'],
+['s6','rail','Le plus beau tunnel ferroviaire d’Europe','tunnel','39 k']
+].map((a,i)=>({id:a[0],ch:a[1],title:a[2],label:a[3],likes:a[4],o:i*14}));
+const CATS=['Tout','Musique','Gaming','Cuisine','Science','Sport','Tech','Humour','Voyage'];
+const BASEC=[
+{who:'Camille R.',ini:'CR',ago:'il y a 2 h',text:'Enfin une plateforme où je regarde une vidéo du début à la fin sans être coupée. Ça change tout.',likes:'1,2 k'},
+{who:'Yanis',ini:'Y',ago:'il y a 5 h',text:'Le montage est super propre, on sent le travail derrière.',likes:'340'},
+{who:'Léa M.',ini:'LM',ago:'il y a 1 jour',text:'Troisième fois que je la regarde. Merci !',likes:'86'}];
+const secs=d=>{const p=d.split(':').map(Number);return p.length===3?p[0]*3600+p[1]*60+p[2]:p[0]*60+p[1]};
+const fmt=s=>{s=Math.floor(s);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+class Component extends DCLogic {
+  state={myCh:['moi','labo'],newCh:'',sysDark:typeof window==='undefined'||!window.matchMedia||window.matchMedia('(prefers-color-scheme: dark)').matches,screen:'home',vid:'v1',chId:'lumen',themeO:null,q:'',cat:'Tout',subs:['lumen','gamelle','code','rires'],liked:[],paused:true,t:0,descOpen:false,draft:'',added:{},chTab:'videos',up:{stage:'pick',title:'',desc:'',vis:'Public',pct:0,ch:'moi'},mine:[],history:['v6','v3'],shortIdx:0,shortLiked:[],w:typeof window!=='undefined'?window.innerWidth:1400};
+  componentDidMount(){
+    this.iv=setInterval(()=>{const s=this.state;
+      if(s.screen==='watch'&&!s.paused){const v=this.allV().find(x=>x.id===s.vid);if(v)this.setState({t:Math.min(secs(v.dur),s.t+0.25)})}
+      if(s.screen==='upload'&&s.up.stage==='form'&&s.up.pct<100)this.setState({up:{...s.up,pct:Math.min(100,s.up.pct+3)}});
+    },250);
+    if(window.matchMedia){this.mq=window.matchMedia('(prefers-color-scheme: dark)');this.onMq=e=>this.setState({sysDark:e.matches});this.mq.addEventListener('change',this.onMq)}
+    this.onR=()=>this.setState({w:window.innerWidth});window.addEventListener('resize',this.onR);
+    this.onK=e=>{if(this.state.screen!=='shorts'||e.target.tagName==='INPUT')return;if(e.key==='ArrowDown'){e.preventDefault();this.nextShort(1)}if(e.key==='ArrowUp'){e.preventDefault();this.nextShort(-1)}};
+    window.addEventListener('keydown',this.onK);
+  }
+  componentWillUnmount(){if(this.mq)this.mq.removeEventListener('change',this.onMq);clearInterval(this.iv);window.removeEventListener('resize',this.onR);window.removeEventListener('keydown',this.onK)}
+  allV(){return [...this.state.mine,...V]}
+  dark(){const t=this.state.themeO??this.props.theme??'system';return t==='system'?this.state.sysDark:t==='dark'}
+  tb(h){return this.dark()?`radial-gradient(130% 110% at 85% 0%, oklch(0.47 0.1 ${h}), oklch(0.21 0.035 ${h}) 72%)`:`radial-gradient(130% 110% at 85% 0%, oklch(0.93 0.05 ${h}), oklch(0.8 0.07 ${h}) 72%)`}
+  ti(h){return this.dark()?`oklch(0.84 0.06 ${h})`:`oklch(0.34 0.07 ${h})`}
+  av(c){return `oklch(0.8 0.11 ${CH[c].h})`}
+  go(screen,extra={}){this.setState({screen,...extra});if(typeof window!=='undefined')window.scrollTo(0,0)}
+  openV(id){this.go('watch',{vid:id,t:0,paused:false,descOpen:false,draft:'',history:[id,...this.state.history.filter(x=>x!==id)].slice(0,12)})}
+  openCh(id){this.go('channel',{chId:id,chTab:'videos'})}
+  card(v){const c=CH[v.ch],h=c.h+v.o;return {...v,channelName:c.name,initials:c.ini,avatarBg:this.av(v.ch),thumbBg:this.tb(h),thumbInk:this.ti(h),meta:`${v.views} vues · ${v.ago}`,open:()=>this.openV(v.id)}}
+  short(s,i){const h=CH[s.ch].h+s.o;return {...s,thumbBg:this.tb(h),thumbInk:this.ti(h),open:()=>this.go('shorts',{shortIdx:i})}}
+  nextShort(d){this.setState(s=>({shortIdx:(s.shortIdx+d+S.length)%S.length}))}
+  toggle(key,id){this.setState(s=>({[key]:s[key].includes(id)?s[key].filter(x=>x!==id):[...s[key],id]}))}
+  subBtn(on){return on?{bg:'var(--surface2)',color:'var(--text)',label:'Abonné'}:{bg:'var(--inv)',color:'var(--oninv)',label:'S’abonner'}}
+  renderVals(){
+    const s=this.state,dark=this.dark(),dev=this.props.device??'auto';
+    const mobile=dev==='mobile'||(dev==='auto'&&s.w<760),desktop=!mobile;
+    const all=this.allV(),scr=s.screen;
+    const navItem=(label,id)=>({label,go:()=>this.go(id),bg:scr===id?'var(--surface2)':'transparent',color:scr===id?'var(--text)':'var(--muted)'});
+    const filt=V.filter(v=>s.cat==='Tout'||v.cat===s.cat).map(v=>this.card(v));
+    const wvRaw=all.find(v=>v.id===s.vid)||V[0],wch=CH[wvRaw.ch],total=secs(wvRaw.dur);
+    const wv={...this.card(wvRaw),chSubs:wch.subs,openCh:()=>this.openCh(wvRaw.ch)};
+    const liked=s.liked.includes(wvRaw.id);
+    const comments=[...(s.added[wvRaw.id]||[]),...(wvRaw.ch==='moi'?[]:BASEC)];
+    const descFull=`${wvRaw.desc||('Merci de regarder, sans aucune pub, comme toujours. Si la vidéo vous plaît, abonnez-vous à '+wch.name+'.')}\n\n00:00 Introduction\n02:14 Le cœur du sujet\n${wvRaw.dur} Fin`;
+    const qq=s.q.trim().toLowerCase();
+    const res=qq?all.filter(v=>(v.title+' '+CH[v.ch].name+' '+v.cat).toLowerCase().includes(qq)):[];
+    const chRes=qq?Object.keys(CH).filter(k=>k!=='moi'&&(CH[k].name+' '+CH[k].desc).toLowerCase().includes(qq)):[];
+    const cch=CH[s.chId],chV=all.filter(v=>v.ch===s.chId).map(v=>this.card(v)),chS=S.map((x,i)=>this.short(x,i)).filter(x=>x.ch===s.chId);
+    const subV=V.filter(v=>s.subs.includes(v.ch)).map(v=>this.card(v));
+    const sh=S[s.shortIdx],shCh=CH[sh.ch],shLiked=s.shortLiked.includes(sh.id);
+    const up=s.up,setUp=o=>this.setState({up:{...this.state.up,...o}});
+    const tabsDef=[['Accueil','home'],['Shorts','shorts'],['+','upload'],['Abonnements','subs'],['Vous','profile']];
+    return {
+      theme:dark?'dark':'light',themeLabel:dark?'Clair':'Sombre',toggleTheme:()=>this.setState({themeO:dark?'light':'dark'}),
+      desktop,mobile,frameMax:mobile?'440px':'none',frameBorder:mobile?'1px solid var(--line)':'0',headPad:mobile?'16px':'20px',logoW:desktop?'212px':'auto',
+      mainPad:scr==='shorts'?(mobile?'0 0 8px':'0 28px 24px'):(mobile?'4px 16px 40px':'8px 28px 64px'),shortW:mobile?'150px':'190px',
+      goHome:()=>this.go('home'),goSearch:()=>this.go('search'),goUpload:()=>this.go('upload'),goProfile:()=>this.go('profile'),
+      q:s.q,onQ:e=>this.setState({q:e.target.value}),onQKey:e=>{if(e.key==='Enter')this.go('search')},doSearch:()=>this.go('search'),
+      navMain:[navItem('Accueil','home'),navItem('Shorts','shorts'),navItem('Abonnements','subs')],
+      navYou:[navItem('Mon compte','profile'),navItem('Publier une vidéo','upload')],
+      subChannels:s.subs.map(k=>({name:CH[k].name,initials:CH[k].ini,avatarBg:this.av(k),go:()=>this.openCh(k)})),
+      tabs:tabsDef.map(([label,id])=>{const on=scr===id,plus=id==='upload';return {label,go:()=>this.go(id),color:plus?'var(--onaccent)':on?'var(--text)':'var(--muted)',bg:plus?'var(--accent)':'transparent',pad:plus?'6px 16px':'6px 0'}}),
+      isHome:scr==='home',chips:CATS.map(c=>({label:c,go:()=>this.setState({cat:c}),bg:s.cat===c?'var(--inv)':'var(--surface2)',color:s.cat===c?'var(--oninv)':'var(--text)'})),
+      homeTop:filt.slice(0,8),homeRest:filt.slice(8),homeEmpty:filt.length===0,showShelf:(this.props.showShortsShelf??true)&&s.cat==='Tout',
+      shortsList:S.map((x,i)=>this.short(x,i)),
+      isWatch:scr==='watch',watchCols:desktop&&s.w>1180?'minmax(0,1fr) 380px':'minmax(0,1fr)',wv,
+      paused:s.paused,togglePlay:()=>this.setState(x=>({paused:!x.paused,t:x.t>=total?0:x.t})),playLabel:s.paused?'Lecture':'Pause',
+      stop:e=>e.stopPropagation(),barH:s.seeking?'6px':'4px',
+      seekStart:e=>{e.stopPropagation();e.preventDefault();const el=e.currentTarget;
+        const at=ev=>{const r=el.getBoundingClientRect();const p=Math.max(0,Math.min(1,(ev.clientX-r.left)/r.width));this.setState({t:p*total})};
+        at(e);this.setState({seeking:true});
+        const mv=ev=>at(ev),upF=()=>{this.setState({seeking:false});window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',upF)};
+        window.addEventListener('pointermove',mv);window.addEventListener('pointerup',upF)},
+      progressPct:(s.t/total*100).toFixed(2)+'%',timeLabel:`${fmt(s.t)} / ${wvRaw.dur}`,
+      subW:this.subBtn(s.subs.includes(wvRaw.ch)),toggleSubW:()=>this.toggle('subs',wvRaw.ch),
+      like:liked?{bg:'var(--inv)',color:'var(--oninv)',label:'J’aime · 1'}:{bg:'var(--surface2)',color:'var(--text)',label:'J’aime'},toggleLike:()=>this.toggle('liked',wvRaw.id),
+      descText:s.descOpen?descFull:descFull.split('\n')[0],descMore:s.descOpen?'Moins':'Plus',toggleDesc:()=>this.setState(x=>({descOpen:!x.descOpen})),
+      commentCount:comments.length,comments,draft:s.draft,onDraft:e=>this.setState({draft:e.target.value}),
+      postComment:()=>this.post(),onDraftKey:e=>{if(e.key==='Enter')this.post()},
+      postBg:s.draft.trim()?'var(--accent)':'var(--surface2)',postColor:s.draft.trim()?'var(--onaccent)':'var(--muted)',
+      upNext:all.filter(v=>v.id!==wvRaw.id).sort((a,b)=>(b.ch===wvRaw.ch)-(a.ch===wvRaw.ch)).slice(0,10).map(v=>this.card(v)),
+      isSearch:scr==='search',hasQ:!!qq,noRes:!!qq&&res.length===0&&chRes.length===0,resCount:res.length,qShown:s.q.trim(),
+      searchRows:res.map(v=>({...this.card(v),snippet:CH[v.ch].desc})),
+      chResults:chRes.map(k=>({name:CH[k].name,initials:CH[k].ini,avatarBg:this.av(k),line:`${CH[k].subs} abonnés`,desc:CH[k].desc,go:()=>this.openCh(k),sub:this.subBtn(s.subs.includes(k)),toggle:e=>{e.stopPropagation();this.toggle('subs',k)}})),
+      suggest:['cuisine','trou noir','train','CSS','marathon'].map(t=>({label:t,go:()=>this.setState({q:t})})),
+      searchCols:desktop?'minmax(240px,360px) minmax(0,1fr)':'minmax(0,1fr)',
+      isChannel:scr==='channel',cch:{...cch,avatarBg:this.av(s.chId),bannerBg:this.tb(cch.h),thumbInk:this.ti(cch.h),line:`${cch.subs} abonnés · ${chV.length} vidéos`},
+      subC:this.subBtn(s.subs.includes(s.chId)),toggleSubC:()=>this.toggle('subs',s.chId),
+      chTabs:[['Vidéos','videos'],['Shorts','shorts'],['À propos','about']].map(([label,id])=>({label,go:()=>this.setState({chTab:id}),color:s.chTab===id?'var(--text)':'var(--muted)',line:s.chTab===id?'var(--text)':'transparent'})),
+      isChVideos:s.chTab==='videos',isChShorts:s.chTab==='shorts',isChAbout:s.chTab==='about',chVideos:chV,chShorts:chS,noChShorts:chS.length===0,noChVideos:chV.length===0,
+      isSubs:scr==='subs',subRow:s.subs.map(k=>({name:CH[k].name,initials:CH[k].ini,avatarBg:this.av(k),go:()=>this.openCh(k)})),subVideos:subV,noSubs:s.subs.length===0,
+      isUpload:scr==='upload',upPick:up.stage==='pick',upForm:up.stage==='form',upDone:up.stage==='done',
+      pickFile:()=>setUp({stage:'form',pct:0,title:'Mon premier site fait avec Claude Code'}),
+      upTitle:up.title,onUpTitle:e=>setUp({title:e.target.value}),upDesc:up.desc,onUpDesc:e=>setUp({desc:e.target.value}),
+      upPct:up.pct+'%',upPctLabel:up.pct<100?`Envoi… ${up.pct} %`:'Vidéo prête',upThumb:this.tb(32),upInk:this.ti(32),
+      visOpts:['Public','Non répertoriée','Privée'].map(o=>({label:o,go:()=>setUp({vis:o}),bg:up.vis===o?'var(--inv)':'var(--surface2)',color:up.vis===o?'var(--oninv)':'var(--text)'})),
+      canPublish:up.pct>=100&&up.title.trim()!=='',pubBg:up.pct>=100&&up.title.trim()?'var(--accent)':'var(--surface2)',pubColor:up.pct>=100&&up.title.trim()?'var(--onaccent)':'var(--muted)',
+      publish:()=>{const u=this.state.up;if(u.pct<100||!u.title.trim()||!CH[u.ch]||!this.state.myCh.includes(u.ch))return;const id='m'+Date.now();this.setState({mine:[{id,ch:u.ch,title:u.title.trim(),desc:u.desc.trim(),cat:'Tech',dur:'4:12',views:'0',ago:'à l’instant',label:'ta vidéo',o:0},...this.state.mine],up:{...u,stage:'done',lastId:id}})},
+      watchMine:()=>this.openV(this.state.up.lastId),uploadAgain:()=>setUp({stage:'pick',title:'',desc:'',pct:0}),
+      isMineV:s.mine.some(v=>v.id===wvRaw.id),isMineCh:s.myCh.includes(s.chId),notMineCh:!s.myCh.includes(s.chId),
+      askDelV:()=>this.setState({confirm:{title:'Supprimer cette vidéo ?',text:'« '+wvRaw.title+' » sera supprimée définitivement.',run:()=>this.delVideos([wvRaw.id],true)}}),
+      askDelAll:()=>{const ids=s.mine.filter(v=>v.ch===s.chId).map(v=>v.id);this.setState({confirm:{title:'Supprimer les vidéos ?',text:ids.length?ids.length+' vidéo(s) de '+cch.name+' seront supprimées définitivement.':'Cette chaîne n’a aucune vidéo à supprimer.',run:()=>this.delVideos(ids,false)}})},
+      askDelCh:()=>this.setState({confirm:{title:'Supprimer ma chaîne ?',text:cch.name+' et toutes ses vidéos seront supprimées définitivement.',run:()=>this.delCh(s.chId)}}),
+      hasConfirm:!!s.confirm,confirmTitle:s.confirm?s.confirm.title:'',confirmText:s.confirm?s.confirm.text:'',
+      cancelConfirm:()=>this.setState({confirm:null}),doConfirm:()=>{const c=this.state.confirm;this.setState({confirm:null});if(c)c.run()},
+      isProfile:scr==='profile',
+      myChList:s.myCh.map(k=>({name:CH[k].name,initials:CH[k].ini,avatarBg:this.av(k),line:`${all.filter(v=>v.ch===k).length} vidéos · ${CH[k].subs} abonnés`,go:()=>this.openCh(k)})),
+      newCh:s.newCh,onNewCh:e=>this.setState({newCh:e.target.value}),onNewChKey:e=>{if(e.key==='Enter')this.createCh()},createCh:()=>this.createCh(),
+      newChBg:s.newCh.trim()?'var(--accent)':'var(--surface2)',newChColor:s.newCh.trim()?'var(--onaccent)':'var(--muted)',
+      upChOpts:s.myCh.map(k=>({label:CH[k].name,avatarBg:this.av(k),go:()=>setUp({ch:k}),bg:up.ch===k?'var(--inv)':'var(--surface2)',color:up.ch===k?'var(--oninv)':'var(--text)'})),
+      upChName:CH[up.ch]?CH[up.ch].name:'',noQ:!qq,shortR:mobile?'0':'20px',myVideos:s.mine.map(v=>this.card(v)),noMine:s.mine.length===0,
+      historyList:s.history.map(id=>all.find(v=>v.id===id)).filter(Boolean).map(v=>this.card(v)),
+      likedList:s.liked.map(id=>all.find(v=>v.id===id)).filter(Boolean).map(v=>this.card(v)),noLiked:s.liked.length===0,
+      profStats:[[s.myCh.length,'chaînes'],[s.mine.length,'vidéos'],[s.subs.length,'abonnements'],[s.history.length,'vues récentes']].map(([n,l])=>({n,l})),
+      isShorts:scr==='shorts',sh:{...sh,thumbBg:this.tb(shCh.h+sh.o),thumbInk:this.ti(shCh.h+sh.o),channelName:shCh.name,initials:shCh.ini,avatarBg:this.av(sh.ch),openCh:()=>this.openCh(sh.ch)},
+      shLike:shLiked?{bg:'var(--accent)',color:'var(--onaccent)'}:{bg:'var(--surface2)',color:'var(--text)'},toggleShortLike:()=>this.toggle('shortLiked',sh.id),
+      shSub:this.subBtn(s.subs.includes(sh.ch)),toggleShSub:()=>this.toggle('subs',sh.ch),
+      prevShort:()=>this.nextShort(-1),nextShortF:()=>this.nextShort(1),shPos:`${s.shortIdx+1} / ${S.length}`,shortH:mobile?'calc(100vh - 140px)':'calc(100vh - 100px)'
+    };
+  }
+  delVideos(ids,leave){this.setState(s=>({mine:s.mine.filter(v=>!ids.includes(v.id)),history:s.history.filter(x=>!ids.includes(x)),liked:s.liked.filter(x=>!ids.includes(x))}));if(leave)this.go('profile')}
+  delCh(id){this.setState(s=>{const ids=s.mine.filter(v=>v.ch===id).map(v=>v.id),myCh=s.myCh.filter(x=>x!==id);return {myCh,mine:s.mine.filter(v=>v.ch!==id),history:s.history.filter(x=>!ids.includes(x)),liked:s.liked.filter(x=>!ids.includes(x)),up:{...s.up,ch:s.up.ch===id?(myCh[0]||''):s.up.ch}}});this.go('profile')}
+  createCh(){const n=this.state.newCh.trim();if(!n)return;const id='c'+Date.now();const ini=n.split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();CH[id]={name:n,ini,h:(Object.keys(CH).length*47)%360,subs:'0',desc:'Nouvelle chaîne.'};this.setState(s=>({myCh:[...s.myCh,id],newCh:''}))}
+  post(){const s=this.state,t=s.draft.trim();if(!t)return;const a=s.added[s.vid]||[];this.setState({draft:'',added:{...s.added,[s.vid]:[{who:'Moi',ini:'MO',ago:'à l’instant',text:t,likes:'0'},...a]}})}
+}
+</script>
+</body>
+</html>
