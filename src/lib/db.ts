@@ -24,6 +24,8 @@ export interface Channel {
   hue: number;
   desc: string;
   createdAt: number;
+  avatar?: string; // data URL (image carrée)
+  banner?: string; // data URL (image 6:1)
 }
 
 export interface Video {

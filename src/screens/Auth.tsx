@@ -1,6 +1,6 @@
 import { useState, type CSSProperties, type FormEvent } from 'react';
 import { useStore } from '../lib/store';
-import { navigate } from '../lib/router';
+import { goBackOr, navigate } from '../lib/router';
 
 const field: CSSProperties = { height: 46, border: 0, outline: 0, borderRadius: 12, background: 'var(--surface2)', padding: '0 14px' };
 const label: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 8 };
@@ -22,10 +22,7 @@ export default function Auth({ mode, reason }: { mode: 'login' | 'signup'; reaso
     try {
       if (signup) await actions.signUp(name, email, pw);
       else await actions.signIn(email, pw);
-      if (onLoginPage) {
-        if (history.length > 1) history.back();
-        else navigate('/', true);
-      }
+      if (onLoginPage) goBackOr('/');
     } catch (x) {
       setErr((x as Error).message);
     } finally {

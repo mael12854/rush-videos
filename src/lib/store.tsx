@@ -198,7 +198,7 @@ function useStoreValue() {
       return ch;
     },
 
-    async updateChannel(chId: string, patch: Partial<Pick<Channel, 'name' | 'desc'>>) {
+    async updateChannel(chId: string, patch: Partial<Pick<Channel, 'name' | 'desc' | 'avatar' | 'banner'>>) {
       if (!ownsChannel(chId)) return;
       const d = await db();
       const ch = await d.get('channels', chId);

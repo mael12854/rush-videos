@@ -9,8 +9,10 @@ function parse(): Route {
 
 export function navigate(to: string, replace = false) {
   if (to === window.location.pathname + window.location.search) return;
-  if (replace) history.replaceState(null, '', to);
-  else history.pushState(null, '', to);
+  // inApp : on peut revenir en arrière sans quitter le site.
+  const inApp = replace ? !!history.state?.inApp : true;
+  if (replace) history.replaceState({ inApp }, '', to);
+  else history.pushState({ inApp }, '', to);
   window.dispatchEvent(new Event('rush:nav'));
   window.scrollTo(0, 0);
 }
@@ -27,4 +29,9 @@ export function useRoute() {
     };
   }, []);
   return r;
+}
+
+export function goBackOr(fallback: string) {
+  if (history.state?.inApp) history.back();
+  else navigate(fallback, true);
 }

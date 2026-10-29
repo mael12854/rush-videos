@@ -24,7 +24,7 @@ export function Avatar({ ch, size, font, style }: { ch?: Channel; size: number; 
         width: size,
         height: size,
         borderRadius: '50%',
-        background: ch ? avatarBg(ch.hue) : 'var(--surface2)',
+        background: ch?.avatar ? `center/cover no-repeat url(${ch.avatar})` : ch ? avatarBg(ch.hue) : 'var(--surface2)',
         color: '#0e0f11',
         fontWeight: 700,
         fontSize: font ?? Math.round(size / 3),
@@ -34,7 +34,7 @@ export function Avatar({ ch, size, font, style }: { ch?: Channel; size: number; 
         ...style,
       }}
     >
-      {font === 0 ? null : ch ? initials(ch.name) : ''}
+      {font === 0 || ch?.avatar ? null : ch ? initials(ch.name) : ''}
     </div>
   );
 }
@@ -238,3 +238,27 @@ export function Confirm({ title, text, onCancel, onConfirm }: { title: string; t
 }
 
 export type ConfirmState = { title: string; text: string; run: () => void } | null;
+
+// Recadre une image (centre) et la réduit, renvoie un JPEG en data URL.
+export function cropImage(file: File, w: number, h: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith('image/')) return reject(new Error('Choisis une image (JPG, PNG, WebP…).'));
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.max(w / img.width, h / img.height);
+      const sw = w / scale, sh = h / scale;
+      const c = document.createElement('canvas');
+      c.width = w;
+      c.height = h;
+      c.getContext('2d')!.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Image illisible.'));
+    };
+    img.src = url;
+  });
+}
