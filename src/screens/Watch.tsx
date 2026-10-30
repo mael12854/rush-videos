@@ -1,34 +1,12 @@
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from 'react';
-import type { Video } from '../lib/db';
-import { getFile } from '../lib/db';
 import { ago, fmtCount, fmtTime, plural } from '../lib/format';
-import { isShort, useDerived, useStore } from '../lib/store';
+import { isShort, useDerived, useStore, type Video } from '../lib/store';
 import { navigate } from '../lib/router';
 import { Avatar, Confirm, Duration, SubButton, UserAvatar, metaLine, openChannel, openVideo, thumbStyle, useWidth, useMobile, type ConfirmState } from '../components/ui';
 
-export function useVideoUrl(id: string) {
-  const [url, setUrl] = useState<string>();
-  useEffect(() => {
-    let u: string | undefined;
-    let alive = true;
-    setUrl(undefined);
-    getFile(id).then((b) => {
-      if (b && alive) {
-        u = URL.createObjectURL(b);
-        setUrl(u);
-      }
-    });
-    return () => {
-      alive = false;
-      if (u) URL.revokeObjectURL(u);
-    };
-  }, [id]);
-  return url;
-}
-
 function Player({ v }: { v: Video }) {
   const { dark } = useStore();
-  const url = useVideoUrl(v.id);
+  const url = v.fileUrl;
   const ref = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(true);
   const [t, setT] = useState(0);
@@ -294,7 +272,7 @@ export default function Watch({ id }: { id: string }) {
           </div>
           {comments.map((c) => {
             const who = userById(c.userId)?.name || 'Compte supprimé';
-            const on = !!user && c.likedBy.includes(user.id);
+            const on = c.likedByMe;
             return (
               <div key={c.id} style={{ display: 'flex', gap: 12 }}>
                 <UserAvatar name={who} size={36} font={12} />
@@ -308,7 +286,7 @@ export default function Watch({ id }: { id: string }) {
                     onClick={() => (user ? actions.toggleCommentLike(c.id) : needLogin())}
                     style={{ fontSize: 12.5, color: on ? 'var(--text)' : 'var(--muted)', cursor: 'pointer', fontWeight: on ? 600 : 400 }}
                   >
-                    {fmtCount(c.likedBy.length)} j'aime
+                    {fmtCount(c.likes)} j'aime
                   </span>
                 </div>
               </div>

@@ -3,7 +3,6 @@ import { fmtCount } from '../lib/format';
 import { isShort, useDerived, useStore } from '../lib/store';
 import { navigate } from '../lib/router';
 import { Avatar, subBtn, thumbStyle } from '../components/ui';
-import { useVideoUrl } from './Watch';
 
 export default function Shorts({ id, mobile }: { id?: string; mobile: boolean }) {
   const { data, user, dark, actions, ownsChannel } = useStore();
@@ -12,7 +11,7 @@ export default function Shorts({ id, mobile }: { id?: string; mobile: boolean })
   const found = id ? list.findIndex((v) => v.id === id) : 0;
   const idx = Math.max(0, found);
   const sh = list[idx];
-  const url = useVideoUrl(sh?.id || '');
+  const url = sh?.fileUrl;
   const ref = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(false);
   const viewed = useRef<string | null>(null);

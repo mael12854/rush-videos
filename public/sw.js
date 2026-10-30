@@ -1,5 +1,5 @@
 // Service worker : l'app s'ouvre même hors ligne (les vidéos sont déjà dans le navigateur).
-const CACHE = 'rush-v1';
+const CACHE = 'rush-v2';
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/manifest.webmanifest', '/icons/icon-192.png'])));
@@ -14,6 +14,8 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+  // Données et vidéos : toujours en direct, jamais en cache.
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/files/') || req.headers.has('range')) return;
   // Pages : réseau d'abord, sinon la coque en cache.
   if (req.mode === 'navigate') {
     e.respondWith(

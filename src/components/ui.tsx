@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
-import type { Channel, Video } from '../lib/db';
+import type { Channel, Video } from '../lib/store';
 import { ago, avatarBg, fmtCount, fmtTime, initials, thumbGradient } from '../lib/format';
 import { useDerived, useStore } from '../lib/store';
 import { navigate } from '../lib/router';

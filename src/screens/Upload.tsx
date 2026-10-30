@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import type { Video, Visibility } from '../lib/db';
 import { CATS, thumbGradient } from '../lib/format';
-import { useStore } from '../lib/store';
+import { uploadVideo, useStore, type Visibility } from '../lib/store';
 import { navigate } from '../lib/router';
 import { Avatar, Pill } from '../components/ui';
 
@@ -52,26 +51,6 @@ function readMeta(file: File): Promise<Meta> {
   });
 }
 
-// Copie le fichier en suivant la progression réelle.
-async function readWithProgress(file: File, onPct: (p: number) => void, cancelled: () => boolean) {
-  const reader = file.stream().getReader();
-  const parts: BlobPart[] = [];
-  let got = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (cancelled()) {
-      reader.cancel();
-      return null;
-    }
-    if (done) break;
-    parts.push(value);
-    got += value.byteLength;
-    onPct(Math.floor((got / (file.size || 1)) * 100));
-  }
-  onPct(100);
-  return new Blob(parts, { type: file.type || 'video/mp4' });
-}
-
 const label = { display: 'flex', flexDirection: 'column', gap: 8 } as CSSProperties;
 const field = { border: 0, outline: 0, borderRadius: 12, background: 'var(--surface2)' } as CSSProperties;
 
@@ -87,10 +66,12 @@ export default function Upload() {
   const [vis, setVis] = useState<Visibility>('Public');
   const [chId, setChId] = useState(myCh[0]?.id || '');
   const [pct, setPct] = useState(0);
-  const [blob, setBlob] = useState<Blob | null>(null);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [fileInfo, setFileInfo] = useState<{ size: number; type: string } | null>(null);
+  const abort = useRef<AbortController | null>(null);
   const [meta, setMeta] = useState<Meta | null>(null);
   const [busy, setBusy] = useState(false);
-  const [last, setLast] = useState<Video | null>(null);
+  const [last, setLast] = useState<{ id: string; channelId: string } | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const job = useRef(0);
 
@@ -99,13 +80,16 @@ export default function Upload() {
     if (!myCh.some((c) => c.id === chId)) setChId(myCh[0]?.id || '');
   }, [myCh, chId]);
 
+  useEffect(() => () => abort.current?.abort(), []);
+
   const reset = () => {
     job.current++;
+    abort.current?.abort();
     setStage('pick');
     setTitle('');
     setDesc('');
     setPct(0);
-    setBlob(null);
+    setFileUrl(null);
     setMeta(null);
     setErr('');
   };
@@ -119,23 +103,44 @@ export default function Upload() {
     setStage('form');
     setTitle(file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim());
     setPct(0);
-    setBlob(null);
+    setFileUrl(null);
     setMeta(null);
-    readMeta(file).then((m) => my === job.current && setMeta(m)).catch((e) => my === job.current && (setErr(e.message), setStage('pick')));
-    readWithProgress(file, (p) => my === job.current && setPct(p), () => my !== job.current).then((b) => b && my === job.current && setBlob(b));
+    setFileInfo({ size: file.size, type: file.type || 'video/mp4' });
+    abort.current?.abort();
+    const ctl = new AbortController();
+    abort.current = ctl;
+    readMeta(file)
+      .then((m) => my === job.current && setMeta(m))
+      .catch((e) => {
+        if (my !== job.current) return;
+        ctl.abort();
+        setErr(e.message);
+        setStage('pick');
+      });
+    uploadVideo(file, file.name, data!.storage, (p) => my === job.current && setPct(Math.min(p, 99)), ctl.signal)
+      .then((url) => {
+        if (my !== job.current) return;
+        setFileUrl(url);
+        setPct(100);
+      })
+      .catch((e) => {
+        if (my !== job.current || ctl.signal.aborted) return;
+        setErr('L’envoi a échoué : ' + ((e as Error).message || 'réessaie.'));
+        setStage('pick');
+      });
   };
 
   const valid = myCh.some((c) => c.id === chId);
-  const can = pct >= 100 && !!blob && !!meta && title.trim() !== '' && valid && !busy;
+  const can = pct >= 100 && !!fileUrl && !!meta && title.trim() !== '' && valid && !busy;
   const publish = async () => {
     if (!can) return;
     setBusy(true);
     try {
-      const v = await actions.publish({ channelId: chId, title, desc, cat, visibility: vis, blob: blob!, ...meta! });
-      setLast(v);
+      const id = await actions.publish({ channelId: chId, title, desc, cat, visibility: vis, fileUrl: fileUrl!, ...fileInfo!, ...meta! });
+      setLast({ id, channelId: chId });
       setStage('done');
     } catch (e) {
-      setErr(e instanceof Error && e.name === 'QuotaExceededError' ? 'Plus assez de place dans ce navigateur pour cette vidéo.' : (e as Error).message || 'Échec de la publication.');
+      setErr((e as Error).message || 'Échec de la publication.');
     } finally {
       setBusy(false);
     }
@@ -251,7 +256,7 @@ export default function Upload() {
             <div style={{ height: 4, borderRadius: 2, background: 'var(--surface2)', overflow: 'hidden' }}>
               <div style={{ height: '100%', width: pct + '%', background: 'var(--accent)' }} />
             </div>
-            <span style={{ fontSize: 13, color: 'var(--muted)' }}>{pct < 100 || !blob ? `Envoi… ${pct} %` : meta ? 'Vidéo prête' : 'Analyse de la vidéo…'}</span>
+            <span style={{ fontSize: 13, color: 'var(--muted)' }}>{pct < 100 || !fileUrl ? `Envoi… ${pct} %` : meta ? 'Vidéo prête' : 'Analyse de la vidéo…'}</span>
             <button
               onClick={publish}
               style={{ height: 44, borderRadius: 999, border: 0, cursor: can ? 'pointer' : 'default', fontWeight: 700, background: can ? 'var(--accent)' : 'var(--surface2)', color: can ? 'var(--onaccent)' : 'var(--muted)' }}

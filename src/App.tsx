@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useStore, useDerived } from './lib/store';
-import type { Channel } from './lib/db';
+import type { Channel } from './lib/store';
 import { navigate, useRoute } from './lib/router';
 import { Avatar, UserAvatar, useMobile } from './components/ui';
 import Home from './screens/Home';
@@ -217,7 +217,7 @@ function Tabs({ screen }: { screen: string }) {
 }
 
 export default function App() {
-  const { data, user } = useStore();
+  const { data, user, loadErr, actions } = useStore();
   const route = useRoute();
   const mobile = useMobile();
   const [q, setQ] = useState(route.query.get('q') || '');
@@ -227,7 +227,20 @@ export default function App() {
     if (top === 'search') setQ(route.query.get('q') || '');
   }, [top, route.query]);
 
-  if (!data) return <div style={{ minHeight: '100vh', background: 'var(--bg)' }} />;
+  if (!data)
+    return (
+      <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24, textAlign: 'center' }}>
+        {loadErr && (
+          <>
+            <span style={{ fontWeight: 700, fontSize: 18 }}>Rush ne répond pas.</span>
+            <span style={{ color: 'var(--muted)' }}>{loadErr}</span>
+            <button onClick={actions.reload} style={{ height: 40, padding: '0 20px', borderRadius: 999, border: 0, cursor: 'pointer', fontWeight: 700, background: 'var(--accent)', color: 'var(--onaccent)' }}>
+              Réessayer
+            </button>
+          </>
+        )}
+      </div>
+    );
 
   const screen =
     top === undefined ? 'home' : ['watch', 'channel', 'search', 'subs', 'upload', 'profile', 'shorts', 'login', 'signup'].includes(top) ? top : 'notfound';

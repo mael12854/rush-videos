@@ -50,7 +50,7 @@ export default function ChannelPage({ id }: { id: string }) {
         {mine && (
           <div style={{ position: 'absolute', right: 12, bottom: 12, display: 'flex', gap: 8 }}>
             {ch.banner && (
-              <button style={overlayBtn} onClick={() => actions.updateChannel(id, { banner: undefined })}>
+              <button style={overlayBtn} onClick={() => actions.updateChannel(id, { banner: null })}>
                 Retirer
               </button>
             )}

@@ -13,25 +13,31 @@ L'app s'ouvre en plein écran, sans barre de navigateur, avec son icône et sa b
 
 ## Où sont les données ?
 
-Tout le code est dans ce dépôt. Il n'y a **aucun serveur ni base de données externe** : les comptes, chaînes, vidéos et commentaires sont enregistrés dans le navigateur (IndexedDB) de chaque appareil.
+Tout le code est dans ce dépôt. Les données sont en ligne, chez Vercel, et partagées entre tous les appareils :
 
-Conséquence : une vidéo publiée sur un appareil n'est visible que sur cet appareil. Pour que tout le monde voie les mêmes vidéos, il faudra brancher un stockage partagé (base de données + stockage de fichiers).
+- **Base Postgres (Neon)** : comptes, chaînes, vidéos (titres, descriptions…), commentaires, abonnements, J'aime. Variable `DATABASE_URL`.
+- **Vercel Blob** : fichiers vidéo, miniatures, icônes et bannières de chaînes. Variable `BLOB_READ_WRITE_TOKEN`.
 
-Le compte du propriétaire (`mael.domenech@gmail.com`) est créé automatiquement au premier lancement. Le mot de passe n'est stocké que sous forme hachée (PBKDF2-SHA256).
+Ces deux variables sont ajoutées automatiquement quand le stockage est relié au projet dans Vercel (onglet *Storage*). Les tables sont créées toutes seules au premier appel.
+
+Le compte du propriétaire (`mael.domenech@gmail.com`) est créé au premier lancement, avec sa chaîne. Les mots de passe sont hachés (PBKDF2-SHA256), jamais stockés en clair.
+
+**Ancienne version** : avant la mise en ligne, les chaînes étaient enregistrées dans le navigateur. En se connectant sur l'appareil concerné, « Mon compte » propose de les **mettre en ligne** (chaînes, icônes, bannières et vidéos).
 
 ## Développement
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
+npm run dev      # http://localhost:5173 (API comprise)
 npm run build    # sortie dans dist/
 ```
 
-Stack : Vite + React + TypeScript, `idb` pour IndexedDB. Déploiement : Vercel (projet `rush-videos`, à chaque push sur `main`).
+Stack : Vite + React + TypeScript. API : une fonction Vercel (`api/index.ts`). Sans `DATABASE_URL` ni Blob, `npm run dev` utilise une base Postgres locale (PGlite) et un dossier `.data/` : rien à installer. Déploiement : Vercel (projet `rush-videos`, à chaque push sur `main`).
 
 ## Organisation
 
-- `src/lib/` — stockage (`db.ts`), comptes (`auth.ts`), état global et actions (`store.tsx`), routage, formats.
+- `api/index.ts` — serveur : comptes, sessions, chaînes, vidéos, commentaires, envois de fichiers.
+- `src/lib/` — état global et appels à l'API (`store.tsx`), import de l'ancienne version (`legacy.ts`, `db.ts`), routage, formats.
 - `src/components/ui.tsx` — carte vidéo, avatars, boutons, modale de confirmation.
 - `src/screens/` — Accueil, Lecteur, Chaîne, Recherche, Abonnements, Publier, Mon compte, Shorts, Connexion.
 - `public/` — manifeste PWA, service worker, icônes.
