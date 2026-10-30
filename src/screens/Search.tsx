@@ -10,12 +10,14 @@ export default function Search({ q, mobile }: { q: string; mobile: boolean }) {
   const [local, setLocal] = useState(q);
   useEffect(() => setLocal(q), [q]);
 
-  const qq = q.trim().toLowerCase();
+  // Insensible à la casse et aux accents : « mael » trouve « Maël ».
+  const norm = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const qq = norm(q.trim());
   const res = qq
     ? data!.videos.filter((v) => v.visibility === 'Public')
-        .filter((v) => (v.title + ' ' + (channel(v.channelId)?.name || '') + ' ' + v.cat).toLowerCase().includes(qq)).sort(newest)
+        .filter((v) => norm(v.title + ' ' + (channel(v.channelId)?.name || '') + ' ' + v.cat).includes(qq)).sort(newest)
     : [];
-  const chRes = qq ? data!.channels.filter((c) => (c.name + ' ' + c.desc).toLowerCase().includes(qq)) : [];
+  const chRes = qq ? data!.channels.filter((c) => norm(c.name + ' ' + c.desc).includes(qq)) : [];
   const go = (t: string) => navigate('/search' + (t.trim() ? '?q=' + encodeURIComponent(t.trim()) : ''), true);
 
   return (
@@ -63,6 +65,19 @@ export default function Search({ q, mobile }: { q: string; mobile: boolean }) {
         );
       })}
       {qq && res.length === 0 && chRes.length === 0 && <span style={{ color: 'var(--muted)' }}>Aucun résultat. Essaie un autre mot.</span>}
+      {!qq && data!.channels.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <span style={{ fontWeight: 700 }}>Chaînes</span>
+          <div style={{ display: 'flex', gap: 22, overflowX: 'auto', paddingBottom: 4 }}>
+            {[...data!.channels].sort((a, b) => a.createdAt - b.createdAt).map((c) => (
+              <div key={c.id} onClick={() => navigate(`/channel/${c.id}`)} style={{ flex: 'none', width: 84, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <Avatar ch={c} size={64} font={18} />
+                <span style={{ fontSize: 12.5, textAlign: 'center', lineHeight: 1.25 }}>{c.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {!qq && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <span style={{ fontWeight: 700 }}>Idées de recherche</span>
