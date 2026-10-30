@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useStore, useDerived } from './lib/store';
+import type { Channel } from './lib/db';
 import { navigate, useRoute } from './lib/router';
 import { Avatar, UserAvatar, useMobile } from './components/ui';
 import Home from './screens/Home';
@@ -117,7 +118,7 @@ const SectionLabel = ({ children }: { children: ReactNode }) => (
 );
 
 function Sidebar({ screen }: { screen: string }) {
-  const { user } = useStore();
+  const { user, data } = useStore();
   const { channel } = useDerived();
   const item = (label: string, id: string, to: string) => {
     const on = screen === id;
@@ -133,6 +134,19 @@ function Sidebar({ screen }: { screen: string }) {
     );
   };
   const subs = (user?.subs || []).map(channel).filter(Boolean);
+  // Toutes les autres chaînes, visibles même sans compte.
+  const others = data!.channels.filter((c) => !user?.subs.includes(c.id)).sort((a, b) => a.createdAt - b.createdAt);
+  const chRow = (c: Channel) => (
+    <div
+      key={c.id}
+      className="h-sub"
+      onClick={() => navigate(`/channel/${c.id}`)}
+      style={{ display: 'flex', alignItems: 'center', gap: 12, height: 40, padding: '0 14px', borderRadius: 12, cursor: 'pointer', color: 'var(--muted)', fontWeight: 500 }}
+    >
+      <Avatar ch={c} size={22} font={9} />
+      <span className="ellipsis">{c.name}</span>
+    </div>
+  );
   return (
     <nav style={{ flex: 'none', width: 236, position: 'sticky', top: 'calc(64px + env(safe-area-inset-top))', height: 'calc(100vh - 64px - env(safe-area-inset-top))', overflowY: 'auto', padding: '8px 12px 20px', display: 'flex', flexDirection: 'column', gap: 2 }}>
       {item('Accueil', 'home', '/')}
@@ -142,17 +156,9 @@ function Sidebar({ screen }: { screen: string }) {
       {item('Mon compte', 'profile', '/profile')}
       {item('Publier une vidéo', 'upload', '/upload')}
       {subs.length > 0 && <SectionLabel>Abonnements</SectionLabel>}
-      {subs.map((c) => (
-        <div
-          key={c!.id}
-          className="h-sub"
-          onClick={() => navigate(`/channel/${c!.id}`)}
-          style={{ display: 'flex', alignItems: 'center', gap: 12, height: 40, padding: '0 14px', borderRadius: 12, cursor: 'pointer', color: 'var(--muted)', fontWeight: 500 }}
-        >
-          <Avatar ch={c} size={22} font={9} />
-          <span className="ellipsis">{c!.name}</span>
-        </div>
-      ))}
+      {subs.map((c) => chRow(c!))}
+      {others.length > 0 && <SectionLabel>Chaînes</SectionLabel>}
+      {others.map(chRow)}
       <div style={{ flex: 1 }} />
       <div style={{ margin: '24px 2px 0', padding: 14, borderRadius: 14, background: 'var(--surface)', display: 'flex', flexDirection: 'column', gap: 4 }}>
         <span style={{ fontWeight: 700 }}>Zéro pub.</span>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { CATS } from '../lib/format';
 import { isShort, useDerived, useStore } from '../lib/store';
 import { navigate } from '../lib/router';
-import { Grid, ShortCard, VideoCard, useMobile } from '../components/ui';
+import { Avatar, Grid, ShortCard, VideoCard, useMobile } from '../components/ui';
 
 export default function Home() {
   const { data } = useStore();
@@ -31,6 +31,19 @@ export default function Home() {
           </button>
         ))}
       </div>
+      {cat === 'Tout' && data!.channels.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>Chaînes</span>
+          <div style={{ display: 'flex', gap: 22, overflowX: 'auto', paddingBottom: 4 }}>
+            {[...data!.channels].sort((a, b) => a.createdAt - b.createdAt).map((c) => (
+              <div key={c.id} onClick={() => navigate(`/channel/${c.id}`)} style={{ flex: 'none', width: 84, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <Avatar ch={c} size={64} font={18} />
+                <span style={{ fontSize: 12.5, textAlign: 'center', lineHeight: 1.25 }}>{c.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {filt.length > 0 && <Grid>{filt.slice(0, 8).map((v) => <VideoCard key={v.id} v={v} />)}</Grid>}
       {showShelf && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
