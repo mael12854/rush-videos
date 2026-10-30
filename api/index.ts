@@ -11,8 +11,16 @@ const pbkdf2Async = promisify(pbkdf2);
 type Row = Record<string, unknown>;
 type Sql = (text: string, params?: unknown[]) => Promise<Row[]>;
 
-const DB_URL = process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
-const BLOB_ON = !!(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
+// Vercel peut ajouter un préfixe aux noms (ex. STORAGE_DATABASE_URL) : on les cherche tous.
+const envEnding = (...names: string[]) => {
+  for (const n of names) if (process.env[n]) return process.env[n]!;
+  const key = Object.keys(process.env).find((k) => names.some((n) => k.endsWith('_' + n)) && process.env[k]);
+  return key ? process.env[key]! : '';
+};
+const DB_URL = envEnding('DATABASE_URL', 'POSTGRES_URL');
+const BLOB_TOKEN = envEnding('BLOB_READ_WRITE_TOKEN');
+const BLOB_ON = !!(BLOB_TOKEN || process.env.BLOB_STORE_ID);
+const blobOpts = BLOB_TOKEN ? { token: BLOB_TOKEN } : {};
 // Les modules de dev sont chargés par un nom calculé pour ne pas finir dans le paquet en ligne.
 const devImport = (name: string) => import(/* @vite-ignore */ name);
 
@@ -81,7 +89,7 @@ const OWNER = {
 async function putFile(pathname: string, body: Buffer, contentType: string): Promise<string> {
   if (BLOB_ON) {
     const { put } = await import('@vercel/blob');
-    const r = await put(pathname, body, { access: 'public', contentType, addRandomSuffix: true });
+    const r = await put(pathname, body, { access: 'public', contentType, addRandomSuffix: true, ...blobOpts });
     return r.url;
   }
   const fs = await devImport('node:fs/promises');
@@ -99,7 +107,7 @@ async function delFiles(urls: (string | null | undefined)[]) {
   try {
     if (BLOB_ON) {
       const { del } = await import('@vercel/blob');
-      await del(list.filter((u) => u.startsWith('https://')));
+      await del(list.filter((u) => u.startsWith('https://')), blobOpts);
     } else {
       const fs = await devImport('node:fs/promises');
       for (const u of list) if (u.startsWith('/files/')) await fs.rm('.data/files/' + u.slice(7), { force: true });
@@ -377,6 +385,7 @@ async function route(req: Request, path: string[]): Promise<Response> {
     if (!BLOB_ON) fail(400, 'Stockage en ligne non configuré.');
     const { handleUpload } = await import('@vercel/blob/client');
     const json = await handleUpload({
+      ...blobOpts,
       body,
       request: req,
       onBeforeGenerateToken: async (pathname, payload) => {
