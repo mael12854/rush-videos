@@ -13,11 +13,17 @@ export default function Search({ q, mobile }: { q: string; mobile: boolean }) {
   // Insensible à la casse et aux accents : « mael » trouve « Maël ».
   const norm = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const qq = norm(q.trim());
+  // Chaque mot doit apparaître, peu importe l'ordre ; le pluriel (s, x) est ignoré.
+  const words = qq.split(/\s+/).filter(Boolean).map((w) => (w.length > 3 ? w.replace(/[sx]$/, '') : w));
+  const matches = (text: string) => {
+    const t = norm(text);
+    return words.every((w) => t.includes(w));
+  };
   const res = qq
     ? data!.videos.filter((v) => v.visibility === 'Public')
-        .filter((v) => norm(v.title + ' ' + (channel(v.channelId)?.name || '') + ' ' + v.cat).includes(qq)).sort(newest)
+        .filter((v) => matches(v.title + ' ' + (channel(v.channelId)?.name || '') + ' ' + v.cat + ' ' + v.desc)).sort(newest)
     : [];
-  const chRes = qq ? data!.channels.filter((c) => norm(c.name + ' ' + c.desc).includes(qq)) : [];
+  const chRes = qq ? data!.channels.filter((c) => matches(c.name + ' ' + c.desc)) : [];
   const go = (t: string) => navigate('/search' + (t.trim() ? '?q=' + encodeURIComponent(t.trim()) : ''), true);
 
   return (
